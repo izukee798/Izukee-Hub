@@ -1,0 +1,163 @@
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
+local Window = Fluent:CreateWindow({
+    Title = "Fluent " .. Fluent.Version,
+    SubTitle = "by dawid",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+}
+
+local Options = Fluent.Options
+
+do
+    local Players = game:GetService("Players")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local LocalPlayer = Players.LocalPlayer
+    local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+    local BuySeedStock = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("BuySeedStock")
+
+    local function toggleGui(name)
+        local ui = PlayerGui:FindFirstChild(name)
+        if ui and ui:IsA("ScreenGui") then
+            ui.Enabled = not ui.Enabled
+            Fluent:Notify({
+                Title = name,
+                Content = "Now " .. (ui.Enabled and "Visible" or "Hidden"),
+                Duration = 4
+            })
+        else
+            Fluent:Notify({
+                Title = "Error",
+                Content = name .. " not found.",
+                Duration = 4
+            })
+        end
+    end
+
+    -- UI Toggle Buttons
+    Tabs.Main:AddButton({
+        Title = "Toggle HoneyEventShop_UI",
+        Description = "Show or hide Honey Shop",
+        Callback = function()
+            toggleGui("HoneyEventShop_UI")
+        end
+    })
+
+    Tabs.Main:AddButton({
+        Title = "Toggle Seed Shop",
+        Description = "Show or hide Seed Shop",
+        Callback = function()
+            toggleGui("Seed_Shop")
+        end
+    })
+
+    Tabs.Main:AddButton({
+        Title = "Toggle Gear Shop",
+        Description = "Show or hide Gear shop",
+        Callback = function()
+            toggleGui("Gear_Shop")
+        end
+    })
+
+    local Seeds = {
+        "Cherry Blossom", "Daffodil", "Coconut", "Lumira", "Crocus", "Easter Egg", "Traveler's Fruit", "Apple",
+        "Dandelion", "Cocovine", "Red Lollipop", "Succulent", "Rosy Delight", "Cranberry", "Loquat", "Dragon Pepper",
+        "Moon Blossom", "Pineapple", "Blood Banana", "Crimson Vine", "Pear", "Nectar Thorn", "Bell Pepper", "Pepper",
+        "Cacao", "Lotus", "Lime", "Orange Tulip", "Cursed Fruit", "Carrot", "Mango", "Green Apple", "Elephant Ears",
+        "Lavender", "Hive Fruit", "Parasol Flower", "Moonglow", "Feijoa", "Avocado", "Mint", "Noble Flower",
+        "Tomato", "Ice Cream Bean", "Nightshade", "Lemon", "Sugar Apple", "Wild Carrot", "Bee Balm", "Starfruit",
+        "Bendboo", "Violet Corn", "Passionfruit", "Papaya", "Corn", "Blueberry", "Candy Blossom", "Purple Dahlia",
+        "Nectarine", "Strawberry", "Bamboo", "Sunflower", "Pink Lily", "Banana", "Rose", "Peach", "Lilac", "Foxglove",
+        "Mushroom", "Moon Mango", "Beanstalk", "Cantaloupe", "Candy Sunflower", "Ember Lily", "Suncoil", "Glowshroom",
+        "Venus Fly Trap", "Eggplant", "Durian", "Soul Fruit", "Prickly Pear", "Cauliflower", "Honeysuckle",
+        "Raspberry", "Dragon Fruit", "Moon Melon", "Moonflower", "Chocolate Carrot", "Watermelon", "Celestiberry",
+        "Cactus", "Grape", "Nectarshade", "Pumpkin", "Kiwi", "Manuka Flower"
+    }
+
+    local selectedSeeds = {}
+
+    local SeedDropdown = Tabs.Main:AddDropdown("SeedDropdown", {
+        Title = "Select Seeds to Auto-Buy",
+        Description = "Multi-select supported",
+        Values = Seeds,
+        Multi = true,
+        Default = {},
+    })
+
+    SeedDropdown:OnChanged(function(selection)
+        selectedSeeds = selection
+    end)
+
+    local AutoBuyToggle = Tabs.Main:AddToggle("AutoBuySeeds", {
+        Title = "Auto Buy Selected Seeds",
+        Description = "Buys selected seeds",
+        Default = false,
+    })
+
+    AutoBuyToggle:OnChanged(function(enabled)
+        if enabled then
+            Fluent:Notify({
+                Title = "Auto Buyer",
+                Content = "Auto-buy started.",
+                Duration = 4,
+            })
+
+            task.spawn(function()
+                while Options.AutoBuySeeds.Value do
+                    local total = 0
+                    for seedName, isSelected in pairs(selectedSeeds) do
+                        if isSelected then
+                            for i = 1, 30 do
+                                BuySeedStock:FireServer(seedName)
+                                task.wait(0.05)
+                                total += 1
+                            end
+                        end
+                    end
+                    Fluent:Notify({
+                        Title = "Auto Buyer",
+                        Content = "Buying seeds.",
+                        Duration = 4,
+                    })
+                    task.wait(5)
+                end
+            end)
+        else
+            Fluent:Notify({
+                Title = "Auto Buyer",
+                Content = "Auto-buy stopped.",
+                Duration = 4,
+            })
+        end
+    end)
+end
+
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
+InterfaceManager:SetFolder("FluentScriptHub")
+SaveManager:SetFolder("FluentScriptHub/specific-game")
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
+
+Window:SelectTab(1)
+
+Fluent:Notify({
+    Title = "Fluent",
+    Content = "The script has been loaded.",
+    Duration = 8
+})
+
+SaveManager:LoadAutoloadConfig()
