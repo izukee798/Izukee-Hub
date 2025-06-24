@@ -165,7 +165,7 @@ end)
 
     local AutoBuyToggle = Tabs.Main:AddToggle("AutoBuySeeds", {
         Title = "Auto Buy Selected Seeds",
-        Description = "Buys selected seeds 30 times every 5 seconds",
+        Description = "Buys selected seeds",
         Default = false,
     })
 
