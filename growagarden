@@ -348,6 +348,33 @@ local AutoHarvestToggle = Tabs.AutoHarvest:AddToggle("AutoHarvest", {
     Default = false
 })
 
+local AutoSummerHarvestThread -- holds the running loop thread
+
+local AutoSummerHarvestToggle = Tabs.AutoHarvest:AddToggle("AutoSummerHarvest", {
+    Title = "Auto Summer Harvest",
+    Description = "Fires SummerHarvestRemoteEvent every second",
+    Default = false,
+    Callback = function(state)
+        if state then
+            AutoSummerHarvestThread = task.spawn(function()
+                while Options.AutoSummerHarvest.Value do
+                    local remote = ReplicatedStorage:FindFirstChild("SummerHarvestRemoteEvent")
+                    if remote then
+                        pcall(function()
+                            remote:FireServer()
+                        end)
+                    end
+                    task.wait(1)
+                end
+            end)
+        else
+            if AutoSummerHarvestThread then
+                task.cancel(AutoSummerHarvestThread)
+                AutoSummerHarvestThread = nil
+            end
+        end
+    end
+})
 -- Functional logic for AutoWalk and AutoHarvest
 local function GetMyFarm()
 	for _, farm in pairs(workspace.Farm:GetChildren()) do
