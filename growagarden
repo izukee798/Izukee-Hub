@@ -343,27 +343,6 @@ local function AutoSellCheck()
     SellInventory()
 end
 
-
--- Toggles and Slider for Auto-Walk & Auto-Harvest
-local AutoWalkToggle = Tabs.AutoHarvest:AddToggle("AutoWalk", {
-    Title = "Auto Walk",
-    Default = false
-})
-
-local AutoWalkAllowRandom = Tabs.AutoHarvest:AddToggle("AutoWalkAllowRandom", {
-    Title = "Allow Random Walk Points",
-    Default = true
-})
-
-local AutoWalkMaxWait = Tabs.AutoHarvest:AddSlider("AutoWalkMaxWait", {
-    Title = "Auto Walk Max Delay",
-    Description = "Delay between walk actions",
-    Min = 1,
-    Max = 120,
-    Default = 10,
-    Rounding = 0
-})
-
 local AutoHarvestToggle = Tabs.AutoHarvest:AddToggle("AutoHarvest", {
     Title = "Auto Harvest Plants",
     Default = false
@@ -398,38 +377,36 @@ local function GetRandomFarmPoint()
 end
 
 local function GetHarvestablePlants()
-	local character = LocalPlayer.Character
-	if not character then return {} end
+    local character = LocalPlayer.Character
+    if not character then return {} end
 
-	local root = GetMyFarm()
-	if not root then return {} end
+    local root = GetMyFarm()
+    if not root then return {} end
 
-	local plantFolder = root.Important:FindFirstChild("Plants_Physical")
-	if not plantFolder then return {} end
+    local plantFolder = root.Important:FindFirstChild("Plants_Physical")
+    if not plantFolder then return {} end
 
-	local pos = character:GetPivot().Position
-	local plants = {}
+    local pos = character:GetPivot().Position
+    local plants = {}
 
-	for _, model in pairs(plantFolder:GetDescendants()) do
-		if model:IsA("ProximityPrompt") and model.Enabled then
-			local parent = model.Parent
-			if parent and parent:IsA("BasePart") and (parent.Position - pos).Magnitude <= 20 then
-				table.insert(plants, model)
-			end
-		end
-	end
+    for _, model in pairs(plantFolder:GetDescendants()) do
+        if model:IsA("ProximityPrompt") and model.Enabled then
+            local parent = model.Parent
 
-	return plants
+            table.insert(plants, parent.Parent)
+        end
+    end
+
+    return plants
 end
 
 local function HarvestPlants()
-	for _, prompt in ipairs(GetHarvestablePlants()) do
-		pcall(function()
-			fireproximityprompt(prompt)
-		end)
-	end
+    for _, prompt in ipairs(GetHarvestablePlants()) do
+        pcall(function()
+            ReplicatedStorage.ByteNetReliable:FireServer(buffer.fromstring("\001\001\000\001"), { prompt })
+        end)
+    end
 end
-
 local function AutoWalkToPlant()
 	if IsSelling then return end
 	local character = LocalPlayer.Character
