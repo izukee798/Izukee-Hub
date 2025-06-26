@@ -343,25 +343,20 @@ local function AutoSellCheck()
     SellInventory()
 end
 
-local AutoHarvestToggle = Tabs.AutoHarvest:AddToggle("AutoHarvest", {
-    Title = "Auto Harvest Plants",
-    Default = false
-})
-
-local AutoSummerHarvestThread -- holds the running loop thread
+local AutoSummerHarvestThread
 
 local AutoSummerHarvestToggle = Tabs.AutoHarvest:AddToggle("AutoSummerHarvest", {
-    Title = "Auto Summer Harvest",
-    Description = "Fires SummerHarvestRemoteEvent every second",
+    Title = "Auto Submit Summer Harvest",
+    Description = "Fires SubmitAllPlants every 1s",
     Default = false,
-    Callback = function(state)
-        if state then
+    Callback = function(enabled)
+        if enabled then
             AutoSummerHarvestThread = task.spawn(function()
                 while Options.AutoSummerHarvest.Value do
-                    local remote = ReplicatedStorage:FindFirstChild("SummerHarvestRemoteEvent")
+                    local remote = ReplicatedStorage:WaitForChild("GameEvents"):FindFirstChild("SummerHarvestRemoteEvent")
                     if remote then
                         pcall(function()
-                            remote:FireServer()
+                            remote:FireServer("SubmitAllPlants")
                         end)
                     end
                     task.wait(1)
@@ -375,6 +370,13 @@ local AutoSummerHarvestToggle = Tabs.AutoHarvest:AddToggle("AutoSummerHarvest", 
         end
     end
 })
+
+local AutoHarvestToggle = Tabs.AutoHarvest:AddToggle("AutoHarvest", {
+    Title = "Auto Collect Plants",
+    Description = "Automatically collects mature plants via ProximityPrompt",
+    Default = false
+})
+
 -- Functional logic for AutoWalk and AutoHarvest
 local function GetMyFarm()
 	for _, farm in pairs(workspace.Farm:GetChildren()) do
@@ -434,6 +436,7 @@ local function HarvestPlants()
         end)
     end
 end
+
 local function AutoWalkToPlant()
 	if IsSelling then return end
 	local character = LocalPlayer.Character
