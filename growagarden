@@ -347,7 +347,7 @@ local AutoSummerHarvestThread
 
 local AutoSummerHarvestToggle = Tabs.AutoHarvest:AddToggle("AutoSummerHarvest", {
     Title = "Auto Submit Summer Harvest",
-    Description = "Fires SubmitAllPlants every 1s",
+    Description = "Auto Submits Plants",
     Default = false,
     Callback = function(enabled)
         if enabled then
@@ -371,9 +371,29 @@ local AutoSummerHarvestToggle = Tabs.AutoHarvest:AddToggle("AutoSummerHarvest", 
     end
 })
 
+-- Auto Buy All 3 Pet Eggs (Slot 1–3)
+local AutoBuyPetEggsToggle = Tabs.AutoHarvest:AddToggle("AutoBuyPetEggs", {
+    Title = "Auto Buy All Pet Eggs",
+    Description = "",
+    Default = false,
+})
+
+task.spawn(function()
+    while task.wait(0.5) do
+        if Options.AutoBuyPetEggs.Value then
+            for slot = 1, 3 do
+                pcall(function()
+                    ReplicatedStorage.GameEvents.BuyPetEgg:FireServer(slot)
+                    task.wait(0.3)
+                end)
+            end
+        end
+    end
+end)
+
 local AutoHarvestToggle = Tabs.AutoHarvest:AddToggle("AutoHarvest", {
     Title = "Auto Collect Plants",
-    Description = "Automatically collects mature plants via ProximityPrompt",
+    Description = "",
     Default = false
 })
 
